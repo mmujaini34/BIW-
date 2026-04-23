@@ -78,13 +78,60 @@ html+=`<div class="section hidden" id="sectionE"><div class="section-title">E. P
 html+=`<div class="section"><div class="section-title">F. Wellhead Penetrator Installation / تركيب ويلاهيد بنترتور</div><div class="section-body">`;F_ITEMS.forEach((it,i)=>html+=itemMarkup(`f_${i+1}`,it[0],it[1],YES_NO_OPTIONS));html+=`</div></div>`;
 html+=`<div class="section"><div class="section-title">G. Bonnet Connection Termination / إنهاء توصيل البونت</div><div class="section-body">`;G_ITEMS.forEach((it,i)=>html+=itemMarkup(`g_${i+1}`,it[0],it[1],COMPLETED_OPTIONS));html+=`</div></div>`;
 html+=`<div class="section"><div class="section-title">H. Remarks / الملاحظات</div><div class="section-body"><div class="field"><label>Remarks / الملاحظات</label><textarea id="remarksH" placeholder="Enter remarks..."></textarea></div></div></div>`;
+html+=`<div class="section"><div class="section-title">I. Cable / الكيبل</div><div class="section-body">
+  <div class="subgrid">
+    <div class="sub-card">
+      <div class="sub-title">MLE Cable / كيبل MLE</div>
+      <div class="check-item">
+        <div class="item-title">MLE Cable Status / حالة كيبل MLE</div>
+        <div class="options">${optionsMarkup('i_mle_status', [
+          {value:'Verified', label:'Verified / تم التحقق'},
+          {value:'Not Verified', label:'Not Verified / لم يتم التحقق'},
+          {value:'N/A', label:'N/A'}
+        ])}</div>
+      </div>
+      <div class="field" style="margin-top:10px;">
+        <label>MLE Cable Size / مقاس كيبل MLE</label>
+        <select id="mleCableSize">
+          <option value="">Select / اختر</option>
+          <option>1</option>
+          <option>2</option>
+          <option>4</option>
+          <option>5</option>
+          <option>6</option>
+        </select>
+      </div>
+    </div>
+    <div class="sub-card">
+      <div class="sub-title">Main Cable / الكيبل الرئيسي</div>
+      <div class="check-item">
+        <div class="item-title">Main Cable Status / حالة الكيبل الرئيسي</div>
+        <div class="options">${optionsMarkup('i_main_status', [
+          {value:'Verified', label:'Verified / تم التحقق'},
+          {value:'Not Verified', label:'Not Verified / لم يتم التحقق'}
+        ])}</div>
+      </div>
+      <div class="field" style="margin-top:10px;">
+        <label>Main Cable Size / مقاس الكيبل الرئيسي</label>
+        <select id="mainCableSize">
+          <option value="">Select / اختر</option>
+          <option>1</option>
+          <option>2</option>
+          <option>4</option>
+          <option>5</option>
+          <option>6</option>
+        </select>
+      </div>
+    </div>
+  </div>
+</div></div>`;
 document.getElementById('dynamicSections').innerHTML=html;document.querySelectorAll('input[name="pkr_gate"]').forEach(r=>r.addEventListener('change',updatePackerGate));}
 function updatePackerGate(){const p=getRadioValue('pkr_gate');const e=document.getElementById('sectionE');if(!e)return;p==='Packer Included'?e.classList.remove('hidden'):e.classList.add('hidden')}
 function getRadioValue(name){const c=document.querySelector(`input[name="${name}"]:checked`);return c?c.value:''}
 function formatGeneratedTimestamp(d){const ms=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];let h=d.getHours();const ap=h>=12?'PM':'AM';h=h%12;if(h===0)h=12;return `${String(d.getDate()).padStart(2,'0')}-${ms[d.getMonth()]}-${d.getFullYear()} ${h}:${String(d.getMinutes()).padStart(2,'0')} ${ap}`}
-function collectData(){const u=normalizeUnitNumber(textValue('unitNumber'));document.getElementById('unitNumber').value=u;return{engineerName:textValue('engineerName'),jobDate:textValue('jobDate'),unitNumber:u,wellNumber:textValue('wellNumber'),crewLeader:textValue('crewLeader'),company:textValue('company'),client:textValue('client'),remarks:textValue('remarksH')}}
+function collectData(){const u=normalizeUnitNumber(textValue('unitNumber'));document.getElementById('unitNumber').value=u;return{engineerName:textValue('engineerName'),jobDate:textValue('jobDate'),unitNumber:u,wellNumber:textValue('wellNumber'),crewLeader:textValue('crewLeader'),company:textValue('company'),client:textValue('client'),remarks:textValue('remarksH'),mleCableStatus:getRadioValue('i_mle_status'),mleCableSize:textValue('mleCableSize'),mainCableStatus:getRadioValue('i_main_status'),mainCableSize:textValue('mainCableSize')}}
 function collectRows(items,prefix){return items.map((it,i)=>[it[0],getRadioValue(`${prefix}_${i+1}`)||'-'])}
-function buildPdfSections(generatedAt){const d=collectData();const s=[{title:'General Information',rows:[['Engineer Name',d.engineerName||'-'],['Date',d.jobDate||'-'],['Rig or Hoist Number',d.unitNumber||'-'],['Well Number',d.wellNumber||'-'],['Crew Leader',d.crewLeader||'-'],['Company',d.company||'-'],['Client',d.client||'-']]},{title:'A. Pre-mobilization Preparation',rows:collectRows(A_ITEMS,'a')},{title:'B. Mobilization',rows:collectRows(B_ITEMS,'b')},{title:'C. Preparation',rows:[...collectRows(C_VERIFY,'c'),['Motor Type',getValue('c_11_motor')||'-'],['Job Preparation Status Reported to FSM',getRadioValue('c_12_job_ready')||'-']]},{title:'D. PKR',rows:[['Does the Work Include a Packer? (PKR)',getRadioValue('pkr_gate')||'-']]}];if(getRadioValue('pkr_gate')==='Packer Included')s.push({title:'E. Packer Penetrator Installation',rows:collectRows(E_ITEMS,'e')});s.push({title:'F. Wellhead Penetrator Installation',rows:collectRows(F_ITEMS,'f')});s.push({title:'G. Bonnet Connection Termination',rows:collectRows(G_ITEMS,'g')});s.push({title:'H. Remarks',rows:[['Remarks',d.remarks||'-']]});s.push({title:'Report Information',rows:[['Report Generated On',formatGeneratedTimestamp(generatedAt)]]});return s}
+function buildPdfSections(generatedAt){const d=collectData();const s=[{title:'General Information',rows:[['Engineer Name',d.engineerName||'-'],['Date',d.jobDate||'-'],['Rig or Hoist Number',d.unitNumber||'-'],['Well Number',d.wellNumber||'-'],['Crew Leader',d.crewLeader||'-'],['Company',d.company||'-'],['Client',d.client||'-']]},{title:'A. Pre-mobilization Preparation',rows:collectRows(A_ITEMS,'a')},{title:'B. Mobilization',rows:collectRows(B_ITEMS,'b')},{title:'C. Preparation',rows:[...collectRows(C_VERIFY,'c'),['Motor Type',getValue('c_11_motor')||'-'],['Job Preparation Status Reported to FSM',getRadioValue('c_12_job_ready')||'-']]},{title:'D. PKR',rows:[['Does the Work Include a Packer? (PKR)',getRadioValue('pkr_gate')||'-']]}];if(getRadioValue('pkr_gate')==='Packer Included')s.push({title:'E. Packer Penetrator Installation',rows:collectRows(E_ITEMS,'e')});s.push({title:'F. Wellhead Penetrator Installation',rows:collectRows(F_ITEMS,'f')});s.push({title:'G. Bonnet Connection Termination',rows:collectRows(G_ITEMS,'g')});s.push({title:'H. Remarks',rows:[['Remarks',d.remarks||'-']]});s.push({title:'I. Cable',rows:[['MLE Cable Status',d.mleCableStatus||'-'],['MLE Cable Size',d.mleCableSize||'-'],['Main Cable Status',d.mainCableStatus||'-'],['Main Cable Size',d.mainCableSize||'-']]});s.push({title:'Report Information',rows:[['Report Generated On',formatGeneratedTimestamp(generatedAt)]]});return s}
 function pdfEsc(v){return String(v||'').replace(/\\/g,'\\\\').replace(/\(/g,'\\(').replace(/\)/g,'\\)').replace(/\r?\n/g,' ')}
 function wrapText(t,max){const words=String(t||'').split(/\s+/).filter(Boolean);if(!words.length)return['-'];const lines=[];let cur='';words.forEach(w=>{const n=cur?cur+' '+w:w;if(n.length<=max)cur=n;else{if(cur)lines.push(cur);cur=w}});if(cur)lines.push(cur);return lines}
 function rect(c,x,y,w,h,col){c.push(`${col} rg`);c.push(`${x.toFixed(2)} ${y.toFixed(2)} ${w.toFixed(2)} ${h.toFixed(2)} re f`)}
@@ -213,8 +260,40 @@ function createStyledPdfBlob(generatedAt){
 }
 
 function downloadBlob(blob,filename){const a=document.createElement('a');const url=URL.createObjectURL(blob);a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),3000)}
-async function generateAndSharePdf(){setBusy(true);setStatus('Preparing PDF...');try{const blob=createStyledPdfBlob(new Date());if(!blob||!blob.size)throw new Error('EMPTY_PDF');const file=new File([blob],'BIW_ITT_Checklist_Summary.pdf',{type:'application/pdf'});if(navigator.share&&typeof navigator.canShare==='function'&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:'BIW ITT Checklist Summary',text:'BIW ITT checklist PDF'});setStatus('PDF shared successfully.')}else{downloadBlob(blob,'BIW_ITT_Checklist_Summary.pdf');setStatus('Direct sharing is not supported here, so the PDF was downloaded instead.')}}catch(err){console.error(err);setStatus('PDF generation failed.')}finally{setBusy(false)}}
-renderSections();attachSmartFormatters();
+async function generateAndSharePdf(){
+      setBusy(true); setStatus('Preparing PDF...');
+      try {
+        const generatedAt = new Date();
+        const blob = createStyledPdfBlob(generatedAt);
+        if (!blob || !blob.size) throw new Error('EMPTY_PDF');
+
+        const isAndroid = /Android/i.test(navigator.userAgent);
+        const canCreateFile = typeof File !== 'undefined';
+        const file = canCreateFile ? new File([blob], 'BIW_ITT_Checklist_Summary.pdf', {type:'application/pdf'}) : null;
+
+        if (!isAndroid && file && navigator.share && typeof navigator.canShare === 'function' && navigator.canShare({files:[file]})) {
+          await navigator.share({files:[file], title:'BIW ITT Checklist Summary', text:'BIW ITT checklist PDF'});
+          setStatus('PDF shared successfully.');
+        } else if (!isAndroid && file && navigator.share) {
+          try {
+            await navigator.share({files:[file], title:'BIW ITT Checklist Summary', text:'BIW ITT checklist PDF'});
+            setStatus('PDF shared successfully.');
+          } catch (shareErr) {
+            downloadBlob(blob, 'BIW_ITT_Checklist_Summary.pdf');
+            setStatus('PDF sharing was not supported, so the PDF was downloaded instead.');
+          }
+        } else {
+          downloadBlob(blob, 'BIW_ITT_Checklist_Summary.pdf');
+          setStatus('PDF downloaded successfully.');
+        }
+      } catch (err) {
+        console.error(err);
+        setStatus('PDF generation failed. Please try again or use another browser.');
+      }
+      finally { setBusy(false); }
+    }
+
+    renderSections();attachSmartFormatters();
 console.assert(document.getElementById('sectionE'),'Packer gate section missing');
 console.assert(typeof createStyledPdfBlob==='function','PDF generator missing');
 </script>
