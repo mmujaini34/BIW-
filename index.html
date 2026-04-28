@@ -281,7 +281,7 @@ body.dark .val-warn{background:#1f1a00;border-color:#7c4f00;color:#fbbf24}
 
 <!-- Signature -->
 <div class="section">
-  <div class="section-title">✍️ Technician Signature / توقيع الفني</div>
+  <div class="section-title">✍️ Engineer Signature / توقيع المهندس</div>
   <div class="section-body">
     <div class="canvas-wrap"><canvas id="sigCanvas" width="900" height="160"></canvas></div>
     <div class="sig-actions">
@@ -487,7 +487,13 @@ function showQR(){
   if(unit)lines.push('Unit: '+unit);
   if(client)lines.push('Client: '+client);
   if(company)lines.push('Company: '+company);
-  var text=lines.length?lines.join('\n'):'BIW ITT Checklist';
+  if(!lines.length){
+    document.getElementById('qrModal').classList.remove('hidden');
+    var h=document.getElementById('qrHolder');
+    h.innerHTML='<div style="padding:20px;color:#5a6a85;font-size:14px;text-align:center">⚠️ Please fill in at least one field first<br><br>الرجاء ملء الحقول أولاً</div>';
+    return;
+  }
+  var text=lines.join('\n');
   document.getElementById('qrModal').classList.remove('hidden');
   var h=document.getElementById('qrHolder');h.innerHTML='';
   try{new QRCode(h,{text:text,width:220,height:220,colorDark:'#0b3b8c',colorLight:'#ffffff'});}
@@ -547,29 +553,21 @@ async function generateAndSharePdf(){
       doc.text(vL,vX+2,y+lh);doc.setTextColor(0,0,0);y+=cH;
     }
 
-    // ── PDF HEADER (matches banner) ──
-    var hH=42,steps=30;
+    // ── PDF HEADER ──
+    var hH=28,steps=30;
     for(var gi=0;gi<steps;gi++){
       var rt=gi/steps;
       doc.setFillColor(Math.round(11+(62-11)*rt),Math.round(59+(85-59)*rt),Math.round(140+(107-140)*rt));
-      doc.rect(mL,y+gi*(hH*0.78/steps),uW,hH*0.78/steps+0.5,'F');
+      doc.rect(mL,y+gi*(hH*0.88/steps),uW,hH*0.88/steps+0.5,'F');
     }
-    doc.setFillColor(gR,gG,gB);doc.rect(mL,y+hH*0.78,uW,hH*0.045,'F');
-    doc.setFillColor(248,250,252);doc.rect(mL,y+hH*0.825,uW,hH*0.175,'F');
-    doc.setFontSize(22);doc.setFont('helvetica','bold');
-    doc.setTextColor(255,255,255);doc.text('BIW',mL+5,y+16);
-    doc.setTextColor(gR,gG,gB);doc.text('ITT',mL+26,y+16);
-    doc.setDrawColor(gR,gG,gB);doc.setLineWidth(0.6);doc.line(mL+5,y+18.5,mL+46,y+18.5);
-    doc.setFontSize(10);doc.setFont('helvetica','bold');doc.setTextColor(255,255,255);
-    doc.text('Installation & Preparation Checklist',mL+5,y+25);
-    doc.setFontSize(7.5);doc.setFont('helvetica','normal');doc.setTextColor(180,205,230);
-    doc.text('Bi-Directional Intelligent Termination Technology',mL+5,y+31);
-    doc.setDrawColor(gR,gG,gB);doc.setLineWidth(0.4);doc.line(mL+5,y+33.5,mL+120,y+33.5);
-    var bX=mL+uW-38,bY=y+3,bW=35,bH2=30;
-    doc.setFillColor(255,255,255);doc.roundedRect(bX,bY,bW,bH2,1.5,1.5,'F');
-    doc.setDrawColor(gR,gG,gB);doc.setLineWidth(0.5);doc.roundedRect(bX,bY,bW,bH2,1.5,1.5,'S');
-    doc.setFontSize(14);doc.setFont('helvetica','bold');doc.setTextColor(11,59,140);doc.text('BIW',bX+5,bY+13);
-    doc.setFontSize(7);doc.setFont('helvetica','normal');doc.text('SERVICES',bX+4,bY+21);
+    doc.setFillColor(gR,gG,gB);doc.rect(mL,y+hH*0.88,uW,hH*0.12,'F');
+    doc.setFontSize(16);doc.setFont('helvetica','bold');
+    doc.setTextColor(255,255,255);doc.text('BIW',mL+5,y+12);
+    var biwW=doc.getTextWidth('BIW');
+    doc.setTextColor(gR,gG,gB);doc.text('ITT',mL+5+biwW+1,y+12);
+    doc.setDrawColor(gR,gG,gB);doc.setLineWidth(0.5);doc.line(mL+5,y+14,mL+5+biwW+doc.getTextWidth('ITT')+2,y+14);
+    doc.setFontSize(9);doc.setFont('helvetica','bold');doc.setTextColor(255,255,255);
+    doc.text('Installation & Preparation Checklist',mL+5,y+21);
     doc.setTextColor(0,0,0);y+=hH+3;
 
     // ── PDF CREATED TIMESTAMP (mandatory) ──
@@ -637,7 +635,7 @@ async function generateAndSharePdf(){
     // Signature
     if(sigData){
       chk(38);
-      sT('Technician Signature');
+      sT('Engineer Signature');
       try{doc.addImage(sigData,'PNG',mL+2,y,70,28);}catch(e){}
       y+=32;
     }
