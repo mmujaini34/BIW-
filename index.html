@@ -396,7 +396,7 @@
           <div class="check-item"><div class="item-title">Access &amp; Documents Valid / صلاحية التصاريح والمستندات</div><div class="options" data-radio="a2"></div></div>
           <div class="check-item"><div class="item-title">Contact Crew Leader Before Mobilization / التواصل مع الكرو ليدر قبل التحرك</div><div class="options" data-radio="a3"></div></div>
 
-          <div class="field" style="margin-top:14px;">
+          <div class="field" id="reasonABox" style="margin-top:14px; display:none;">
             <label>Reason if No / السبب إذا كانت الإجابة لا</label>
             <textarea id="reasonA"></textarea>
           </div>
@@ -419,42 +419,37 @@
           <div class="check-item"><div class="item-title">Tools, Equipment &amp; Personal Tools Availability / التأكد من توفر العدة والأدوات الشخصية</div><div class="options" data-radio="c1"></div></div>
 
           <div class="check-item">
-            <div class="item-title">Cable Measurement &amp; Size / قياس الكيبل وتحديد المقاس</div>
-            <div class="subgrid">
-              <div class="sub-card">
-                <div class="sub-title">MLE Cable / كيبل MLE</div>
-                <div class="options" data-radio="c2_mle"></div>
-                <div class="field" style="margin-top:10px;">
-                  <label>Size / المقاس</label>
-                  <select id="c2_mle_size">
-                    <option value="">Select / اختر</option>
-                    <option>1</option>
-                    <option>2</option>
-                    <option>4</option>
-                    <option>6</option>
-                  </select>
-                </div>
-              </div>
+            <div class="item-title">MLE Cable / كيبل MLE</div>
+            <div class="options" data-radio="c2_mle"></div>
+            <div class="field" style="margin-top:10px;">
+              <label>Size / المقاس</label>
+              <select id="c2_mle_size">
+                <option value="">Select / اختر</option>
+                <option>1</option>
+                <option>2</option>
+                <option>4</option>
+                <option>6</option>
+              </select>
+            </div>
+          </div>
 
-              <div class="sub-card">
-                <div class="sub-title">Main Cable / الكيبل الرئيسي</div>
-                <div class="options" data-radio="c2_main"></div>
-                <div class="field" style="margin-top:10px;">
-                  <label>Size / المقاس</label>
-                  <select id="c2_main_size">
-                    <option value="">Select / اختر</option>
-                    <option>1</option>
-                    <option>2</option>
-                    <option>4</option>
-                    <option>6</option>
-                  </select>
-                </div>
-              </div>
+          <div class="check-item">
+            <div class="item-title">Main Cable / الكيبل الرئيسي</div>
+            <div class="options" data-radio="c2_main"></div>
+            <div class="field" style="margin-top:10px;">
+              <label>Size / المقاس</label>
+              <select id="c2_main_size">
+                <option value="">Select / اختر</option>
+                <option>1</option>
+                <option>2</option>
+                <option>4</option>
+                <option>6</option>
+              </select>
             </div>
           </div>
 
           <div class="check-item"><div class="item-title">Landing Lead Availability / توفر اللاندنج ليد</div><div class="options" data-radio="c3"></div></div>
-          <div class="check-item"><div class="item-title">Packer Inspection &amp; Measurement / فحص الباكر والقياس</div><div class="options" data-radio="c4"></div></div>
+          <div class="check-item"><div class="item-title">Packer Inspection &amp; Measurement / فحص الباكر والقياس - See Section D / راجع القسم D</div><div class="options" data-radio="c4"></div></div>
           <div class="check-item"><div class="item-title">Hanger Inspection / فحص الهنجر</div><div class="options" data-radio="c5"></div></div>
           <div class="check-item"><div class="item-title">Christmas Tree &amp; Bonnet Check / فحص الكرسمس والبونت</div><div class="options" data-radio="c6"></div></div>
           <div class="check-item"><div class="item-title">Casing Size Verification / التحقق من مقاس الكيسنج</div><div class="options" data-radio="c7"></div></div>
@@ -475,6 +470,72 @@
           <div class="check-item"><div class="item-title">Notify Crew Leader Job is Ready / إبلاغ الكرو ليدر بجاهزية العمل</div><div class="options" data-radio="c10"></div></div>
         </div>
       </div>
+
+      <div class="section">
+        <div class="section-title">Section D - Packer / القسم D - الباكر</div>
+        <div class="section-body">
+          <div class="check-item">
+            <div class="item-title">Does the Work Include a Packer? / هل يتضمن العمل وجود Packer؟</div>
+            <div class="options" data-radio="packer_required"></div>
+          </div>
+
+          <div id="packerSection" style="display:none;">
+            <div class="item-title">Packer Section / قسم الباكر</div>
+            <div class="hint" style="margin-bottom:12px;">
+              تم حجز هذا القسم لتفاصيل الباكر وسيتم العمل عليه لاحقًا بشكل مفصل.
+              يشمل مبدئيًا: خيارات MLE، التحقق من أطوال الباكر، ونوع الباكر 7 inch أو 9 inch.
+            </div>
+
+            <div class="subgrid">
+              <div class="sub-card">
+                <div class="sub-title">Packer MLE / كيبل MLE الخاص بالباكر</div>
+                <div class="options" data-radio="packer_mle"></div>
+                <div class="field" style="margin-top:10px;">
+                  <label>Size / المقاس</label>
+                  <select id="packer_mle_size">
+                    <option value="">Select / اختر</option>
+                    <option>1</option>
+                    <option>2</option>
+                    <option>4</option>
+                    <option>6</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="sub-card">
+                <div class="sub-title">Packer Length Verification / التحقق من أطوال الباكر</div>
+                <div class="options" data-radio="packer_length"></div>
+
+                <div id="packerLengthFields" style="display:none; margin-top:12px;">
+                  <div class="field" style="margin-bottom:10px;">
+                    <label>Upper Length / الطول فوق</label>
+                    <input type="text" id="packer_upper_length" placeholder="Example: 12m" />
+                  </div>
+                  <div class="field">
+                    <label>Lower Length / الطول تحت</label>
+                    <input type="text" id="packer_lower_length" placeholder="Example: 8m" />
+                  </div>
+                </div>
+              </div>
+
+              <div class="sub-card">
+                <div class="sub-title">Packer Size / مقاس الباكر</div>
+                <div class="options" data-radio="packer_size"></div>
+                <div class="hint" style="margin-top:10px; margin-bottom:0;">
+                  Optional / اختياري
+                </div>
+              </div>
+
+              <div class="sub-card">
+                <div class="sub-title">Packer Type / نوع الباكر</div>
+                <div class="options" data-radio="packer_type"></div>
+              </div>
+            </div>
+          </div>
+
+
+        </div>
+      </div>
     </div>
 
     <div class="actions">
@@ -488,20 +549,25 @@
 
   <script>
     const radioConfigs = {
-      a1:['Yes / نعم','No / لا'],
-      a2:['Yes / نعم','No / لا'],
-      a3:['Yes / نعم','No / لا'],
-      b2:['Yes / نعم','No / لا'],
-      c1:['Yes / نعم','No / لا'],
-      c2_mle:['Yes / نعم','No / لا'],
-      c2_main:['Yes / نعم','No / لا'],
-      c3:['Yes / نعم','No / لا'],
-      c4:['Yes / نعم','No / لا'],
-      c5:['Yes / نعم','No / لا'],
-      c6:['Yes / نعم','No / لا'],
-      c7:['Yes / نعم','No / لا'],
+      a1:['Verified / تم التحقق','Not Verified / لم يتم التحقق'],
+      a2:['Verified / تم التحقق','Not Verified / لم يتم التحقق'],
+      a3:['Contacted / تم التواصل','Not Contacted / لم يتم التواصل'],
+      b2:['Notified / تم الإبلاغ','Not Notified / لم يتم الإبلاغ'],
+      c1:['Verified / تم التحقق','Not Verified / لم يتم التحقق'],
+      c2_mle:['Verified / تم التحقق','Not Verified / لم يتم التحقق'],
+      c2_main:['Available / متواجد','Not Available / غير متواجد'],
+      packer_required:['نعم / Yes','لا / No'],
+      packer_mle:['Verified / تم التحقق','Not Verified / لم يتم التحقق'],
+      packer_length:['Verified / تم التحقق','Not Verified / لم يتم التحقق'],
+      packer_size:['7″','9 ⁵/₈″','Optional / اختياري'],
+      packer_type:['Mandrel / منفذ واحد','Three Ports / ٣ منافذ','Optional / اختياري'],
+      c3:['Available / متواجد','Not Available / غير متواجد'],
+      c4:['Moved to Packer Section / تذهب للخانة الخاصة بالباكر','N/A / غير مطبق'],
+      c5:['Verified / تم التحقق','Not Verified / لم يتم التحقق'],
+      c6:['Inspected / تم الفحص','Not Inspected / لم يتم الفحص'],
+      c7:['Verified / تم التحقق','Not Verified / لم يتم التحقق'],
       c9:['Yes / نعم','No / لا'],
-      c10:['Yes / نعم','No / لا']
+      c10:['Notified / تم الإبلاغ','Not Notified / لم يتم الإبلاغ']
     };
 
     function createRadioPair(name, yesLabel, noLabel) {
@@ -583,6 +649,9 @@
         systemType: fieldValue('systemType'),
         c2_mle_size: fieldValue('c2_mle_size'),
         c2_main_size: fieldValue('c2_main_size'),
+        packer_mle_size: fieldValue('packer_mle_size'),
+        packer_upper_length: fieldValue('packer_upper_length'),
+        packer_lower_length: fieldValue('packer_lower_length'),
         radios: {
           a1: selectedValue('a1'),
           a2: selectedValue('a2'),
@@ -591,6 +660,11 @@
           c1: selectedValue('c1'),
           c2_mle: selectedValue('c2_mle'),
           c2_main: selectedValue('c2_main'),
+          packer_required: selectedValue('packer_required'),
+          packer_mle: selectedValue('packer_mle'),
+          packer_length: selectedValue('packer_length'),
+          packer_size: selectedValue('packer_size'),
+          packer_type: selectedValue('packer_type'),
           c3: selectedValue('c3'),
           c4: selectedValue('c4'),
           c5: selectedValue('c5'),
@@ -604,8 +678,24 @@
 
     function badgeFor(value) {
       const v = String(value).toLowerCase();
-      if (v.includes('yes') || v.includes('نعم')) return `<span class="badge-yes">${value}</span>`;
-      if (v.includes('no') || v.includes('لا')) return `<span class="badge-no">${value}</span>`;
+      if (
+        v.includes('not verified') || v.includes('لم يتم التحقق') ||
+        v.includes('not contacted') || v.includes('لم يتم التواصل') ||
+        v.includes('not notified') || v.includes('لم يتم الإبلاغ') ||
+        v.includes('not available') || v.includes('غير متواجد') ||
+        v.includes('not inspected') || v.includes('لم يتم الفحص') ||
+        v.includes('no') || v.includes('لا')
+      ) return `<span class="badge-no">${value}</span>`;
+
+      if (
+        v.includes('verified') || v.includes('تم التحقق') ||
+        v.includes('contacted') || v.includes('تم التواصل') ||
+        v.includes('notified') || v.includes('تم الإبلاغ') ||
+        v.includes('available') || v.includes('متواجد') ||
+        v.includes('inspected') || v.includes('تم الفحص') ||
+        v.includes('yes') || v.includes('نعم')
+      ) return `<span class="badge-yes">${value}</span>`;
+
       return `<span class="badge-neutral">${value}</span>`;
     }
 
@@ -682,6 +772,22 @@
             </table>
           </div>
 
+          <div class="summary-section">
+            <h3>Section D - Packer / القسم D - الباكر</h3>
+            <table class="summary-table">
+              ${summaryRow('Does the Work Include a Packer? / هل يتضمن العمل وجود Packer؟', d.radios.packer_required)}
+              ${d.radios.packer_required.includes('Yes') || d.radios.packer_required.includes('نعم') ? `
+                ${summaryRow('Packer MLE / كيبل MLE الخاص بالباكر', d.radios.packer_mle)}
+                ${summaryRow('Packer MLE Size / مقاس كيبل MLE الخاص بالباكر', d.packer_mle_size, false)}
+                ${summaryRow('Packer Length Verification / التحقق من أطوال الباكر', d.radios.packer_length)}
+                ${summaryRow('Upper Length / الطول فوق', d.packer_upper_length, false)}
+                ${summaryRow('Lower Length / الطول تحت', d.packer_lower_length, false)}
+                ${summaryRow('Packer Size / مقاس الباكر', d.radios.packer_size)}
+                ${summaryRow('Packer Type / نوع الباكر', d.radios.packer_type)}
+              ` : ''}
+            </table>
+          </div>
+
           <div class="pdf-only-note">Report Generated On: ${generatedAt}</div>
         </div>
       `;
@@ -722,8 +828,53 @@
       setTimeout(() => window.print(), 200);
     }
 
+    function toggleReasonABox() {
+      const box = document.getElementById('reasonABox');
+      if (!box) return;
+      const shouldShow = ['a1','a2','a3'].some(name => {
+        const value = selectedValue(name).toLowerCase();
+        return value.includes('not') || value.includes('لم يتم') || value.includes('لا');
+      });
+      box.style.display = shouldShow ? 'flex' : 'none';
+    }
+
+    function togglePackerSection() {
+      const section = document.getElementById('packerSection');
+      if (!section) return;
+      const value = selectedValue('packer_required');
+      section.style.display = (value.includes('Yes') || value.includes('نعم')) ? 'block' : 'none';
+    }
+
+
+    function addMeterSuffix(input) {
+      if (!input) return;
+      let value = input.value.trim();
+      if (!value) return;
+      value = value.replace(/\s+/g, '');
+      value = value.replace(/m+$/i, '');
+      input.value = value ? `${value}m` : '';
+    }
+
+    function togglePackerLengthFields() {
+      const box = document.getElementById('packerLengthFields');
+      if (!box) return;
+      const value = selectedValue('packer_length');
+      box.style.display = (value.includes('Verified') || value.includes('تم التحقق')) ? 'block' : 'none';
+    }
+
     document.getElementById('arrivalTime').addEventListener('blur', normalizeArrivalTime);
+    ['packer_upper_length','packer_lower_length'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('blur', () => addMeterSuffix(el));
+    });
     injectRadioGroups();
+    document.querySelectorAll('input[type="radio"]').forEach(input => {
+      input.addEventListener('change', () => {
+        toggleReasonABox();
+        togglePackerSection();
+        togglePackerLengthFields();
+      });
+    });
     setDefaultDate();
   </script>
 </body>
