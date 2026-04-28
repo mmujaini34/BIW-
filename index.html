@@ -716,6 +716,20 @@ async function generateAndSharePdf(){
       y+=32;
     }
 
+    // ── STAMP: إذا progress 100% ──
+    var stampFields=[
+      {type:'text',id:'engineerName'},{type:'text',id:'wellNumber'},
+      {type:'text',id:'arrivalTime'},{type:'text',id:'unitNumber'},
+      {type:'select',id:'company'},{type:'select',id:'client'},
+      'a1','a2','a3','b2','c1','c2_main','c3','c5','c6','c7','packer_required','c9','c10'
+    ];
+    var stampTotal=stampFields.length,stampDone=0;
+    stampFields.forEach(function(f){
+      if(typeof f==='string'){var c=document.querySelector('input[name="'+f+'"]:checked');if(c)stampDone++;}
+      else{var el=document.getElementById(f.id);if(el&&el.value&&el.value.trim())stampDone++;}
+    });
+    var isComplete=(stampDone===stampTotal);
+
     // Footer on every page
     var tp=doc.getNumberOfPages();
     for(var p=1;p<=tp;p++){
@@ -725,6 +739,27 @@ async function generateAndSharePdf(){
       doc.text('BIW ITT Checklist — Confidential',mL,pageH-3);
       doc.text('Page '+p+' of '+tp,pageW-mR-20,pageH-3);
       doc.setTextColor(0,0,0);
+
+      // ختم COMPLETED على الصفحة الأولى فقط
+      if(p===1 && isComplete){
+        var sx=pageW-52,sy=mT+2,sw=36,sh=14,sr=3;
+        // مستطيل أخضر مستدير
+        doc.setFillColor(22,101,52);
+        doc.roundedRect(sx,sy,sw,sh,sr,sr,'F');
+        // إطار
+        doc.setDrawColor(16,80,40);
+        doc.setLineWidth(0.5);
+        doc.roundedRect(sx,sy,sw,sh,sr,sr,'S');
+        // ✓ COMPLETED
+        doc.setFont('helvetica','bold');
+        doc.setFontSize(8);
+        doc.setTextColor(255,255,255);
+        doc.text('✓ COMPLETED',sx+3.5,sy+6);
+        doc.setFontSize(6.5);
+        doc.setFont('helvetica','normal');
+        doc.text(stampDone+'/'+stampTotal+' fields',sx+7,sy+10.5);
+        doc.setTextColor(0,0,0);
+      }
     }
 
     // Download + Share
