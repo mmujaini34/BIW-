@@ -380,6 +380,19 @@ function labelFor(name,val){
   var found=cfg.find(function(o){return o[1]===val;});
   return found?found[0]:val;
 }
+// PDF version: English only (jsPDF doesn't support Arabic)
+function labelForPdf(name,val){
+  var map={
+    verified:'Verified',not_verified:'Not Verified',
+    contacted:'Contacted',not_contacted:'Not Contacted',
+    notified:'Notified',not_notified:'Not Notified',
+    available:'Available',not_available:'Not Available',
+    inspected:'Inspected',not_inspected:'Not Inspected',
+    yes:'Yes',no:'No',
+    mandrel:'Mandrel',three_ports:'Three Ports',
+  };
+  return map[val]||val||'—';
+}
 
 // ── DARK MODE ──────────────────────────────────────────────
 function toggleDark(){
@@ -465,8 +478,8 @@ async function generateAndSharePdf(){
       doc.setFont('helvetica','bold');doc.setFontSize(8.2);doc.setTextColor(11,59,140);doc.text(lL,lX+2,y+lh);
       doc.setFont('helvetica','normal');doc.setFontSize(8.5);
       var vLow=String(value||'').toLowerCase();
-      if(vLow.includes('verified')||vLow.includes('تم التحقق')||vLow.includes('contacted')||vLow.includes('notified')||vLow.includes('available')||vLow.includes('inspected')||vLow.includes('yes')||vLow.includes('نعم')){doc.setTextColor(22,101,52);}
-      else if(vLow.includes('not')||vLow.includes('لم')||vLow.includes('no')||vLow.includes('لا')){doc.setTextColor(153,27,27);}
+      if(vLow==='verified'||vLow==='contacted'||vLow==='notified'||vLow==='available'||vLow==='inspected'||vLow==='yes'){doc.setTextColor(22,101,52);}
+      else if(vLow==='not verified'||vLow==='not contacted'||vLow==='not notified'||vLow==='not available'||vLow==='not inspected'||vLow==='no'){doc.setTextColor(153,27,27);}
       else{doc.setTextColor(51,65,85);}
       doc.text(vL,vX+2,y+lh);doc.setTextColor(0,0,0);y+=cH;
     }
@@ -510,58 +523,58 @@ async function generateAndSharePdf(){
 
     // ── SECTIONS ──
     var unitN=normUnit(tv('unitNumber'));
-    sT('General Information / المعلومات العامة');
+    sT('General Information');
     [['Engineer Name',tv('engineerName')||'—'],['Job Date (Optional)',fmtDate(tv('jobDate'))||'—'],
      ['Rig or Hoist Number',unitN||'—'],['Well Number',tv('wellNumber')||'—'],
      ['Crew Leader',tv('crewLeader')||'—'],['Company',tv('company')||'—'],['Client',tv('client')||'—']
     ].forEach(function(r,i){rw(r[0],r[1],i%2===0);});y+=4;
 
-    sT('Section A / القسم A');
-    [['PPE & H2S Card',labelFor('a1',rv('a1'))||'—'],
-     ['Valid Access & Documents',labelFor('a2',rv('a2'))||'—'],
-     ['Contact Crew Leader Before Mobilization',labelFor('a3',rv('a3'))||'—'],
+    sT('Section A');
+    [['PPE & H2S Card',labelForPdf('a1',rv('a1'))||'—'],
+     ['Valid Access & Documents',labelForPdf('a2',rv('a2'))||'—'],
+     ['Contact Crew Leader Before Mobilization',labelForPdf('a3',rv('a3'))||'—'],
      ['Reason if Not Verified',tv('reasonA')||'—']
     ].forEach(function(r,i){rw(r[0],r[1],i%2===0);});y+=4;
 
-    sT('Section B / القسم B');
+    sT('Section B');
     [['Arrival Time',normArrival(tv('arrivalTime'))||'—'],
-     ['Notify Crew Leader Upon Arrival',labelFor('b2',rv('b2'))||'—']
+     ['Notify Crew Leader Upon Arrival',labelForPdf('b2',rv('b2'))||'—']
     ].forEach(function(r,i){rw(r[0],r[1],i%2===0);});y+=4;
 
-    sT('Section C / القسم C');
-    [['Tools, Equipment & Personal Tools',labelFor('c1',rv('c1'))||'—'],
-     ['Main Cable',labelFor('c2_main',rv('c2_main'))||'—'],
+    sT('Section C');
+    [['Tools, Equipment & Personal Tools',labelForPdf('c1',rv('c1'))||'—'],
+     ['Main Cable',labelForPdf('c2_main',rv('c2_main'))||'—'],
      ['Main Cable Size',tv('c2_main_size')||'—'],
-     ['Landing Lead',labelFor('c3',rv('c3'))||'—'],
-     ['Hanger Inspection',labelFor('c5',rv('c5'))||'—'],
-     ['Christmas Tree & Bonnet',labelFor('c6',rv('c6'))||'—'],
-     ['Casing Size Verification',labelFor('c7',rv('c7'))||'—'],
+     ['Landing Lead',labelForPdf('c3',rv('c3'))||'—'],
+     ['Hanger Inspection',labelForPdf('c5',rv('c5'))||'—'],
+     ['Christmas Tree & Bonnet',labelForPdf('c6',rv('c6'))||'—'],
+     ['Casing Size Verification',labelForPdf('c7',rv('c7'))||'—'],
      ['System Type',tv('systemType')||'—']
     ].forEach(function(r,i){rw(r[0],r[1],i%2===0);});y+=4;
 
-    sT('Section D - Packer / القسم D - الباكر');
-    rw('Does the Work Include a Packer?',labelFor('packer_required',rv('packer_required'))||'—',true);
+    sT('Section D - Packer');
+    rw('Does the Work Include a Packer?',labelForPdf('packer_required',rv('packer_required'))||'—',true);
     if(rv('packer_required')==='yes'){
-      [['Packer MLE Cable',labelFor('packer_mle',rv('packer_mle'))||'—'],
+      [['Packer MLE Cable',labelForPdf('packer_mle',rv('packer_mle'))||'—'],
        ['Packer MLE Size',tv('packer_mle_size')||'—'],
-       ['Packer Length Verification',labelFor('packer_length',rv('packer_length'))||'—'],
+       ['Packer Length Verification',labelForPdf('packer_length',rv('packer_length'))||'—'],
        ['Upper Length',tv('packer_upper_length')||'—'],
        ['Lower Length',tv('packer_lower_length')||'—'],
        ['Packer Size',tv('packer_size')||'—'],
-       ['Packer Type',labelFor('packer_type',rv('packer_type'))||'—']
+       ['Packer Type',labelForPdf('packer_type',rv('packer_type'))||'—']
       ].forEach(function(r,i){rw(r[0],r[1],i%2===0);});
     }
     y+=4;
 
-    sT('Section E - Final Readiness / القسم E - الجاهزية النهائية');
-    [['Backup Kit Availability',labelFor('c9',rv('c9'))||'—'],
-     ['Notify Crew Leader - Job Ready',labelFor('c10',rv('c10'))||'—']
+    sT('Section E - Final Readiness');
+    [['Backup Kit Availability',labelForPdf('c9',rv('c9'))||'—'],
+     ['Notify Crew Leader - Job Ready',labelForPdf('c10',rv('c10'))||'—']
     ].forEach(function(r,i){rw(r[0],r[1],i%2===0);});y+=4;
 
     // Signature
     if(sigData){
       chk(38);
-      sT('Technician Signature / توقيع الفني');
+      sT('Technician Signature');
       try{doc.addImage(sigData,'PNG',mL+2,y,70,28);}catch(e){}
       y+=32;
     }
