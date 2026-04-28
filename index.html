@@ -590,6 +590,26 @@ function clearSig(){document.getElementById('sigCanvas').getContext('2d').clearR
 function confirmSig(){sigData=document.getElementById('sigCanvas').toDataURL('image/png');document.getElementById('sigOk').classList.remove('hidden');setStatus('✅ Signature confirmed.');}
 
 // ── QR ─────────────────────────────────────────────────────
+function buildQR(text){
+  var h=document.getElementById('qrHolder');
+  h.innerHTML='';
+  try{
+    if(typeof QRCode==='undefined') throw new Error('no QRCode');
+    new QRCode(h,{text:text,width:220,height:220,colorDark:'#0b3b8c',colorLight:'#ffffff'});
+  } catch(e){
+    // Fallback: QR image server. If that also fails, show the plain text.
+    var img=document.createElement('img');
+    img.src='https://api.qrserver.com/v1/create-qr-code/?data='+encodeURIComponent(text)+'&size=220x220&color=0b3b8c&bgcolor=ffffff';
+    img.alt='Job QR Code';
+    img.style.cssText='width:220px;height:220px;display:block;margin:auto;';
+    img.onerror=function(){
+      h.style.cssText='padding:10px;font-size:12px;word-break:break-all;text-align:center;line-height:1.6';
+      h.textContent=text;
+    };
+    h.appendChild(img);
+  }
+}
+
 function showQR(){
   var eng=tv('engineerName');
   var crew=tv('crewLeader');
@@ -610,30 +630,8 @@ function showQR(){
     h.innerHTML='<div style="padding:20px;color:#5a6a85;font-size:14px;text-align:center">⚠️ Please fill in at least one field first<br><br>الرجاء ملء الحقول أولاً</div>';
     return;
   }
-  var text=lines.join('\n');
   document.getElementById('qrModal').classList.remove('hidden');
-  var h=document.getElementById('qrHolder');h.innerHTML='';
-  if (typeof QRCode === 'undefined') {
-    h.innerHTML =
-      '<div style="padding:14px;font-size:13px;color:#991b1b;line-height:1.6">' +
-      'QR library not loaded. Please check internet connection.<br>' +
-      'لم يتم تحميل مكتبة QR. تأكد من الاتصال بالإنترنت.' +
-      '</div>';
-    return;
-  }
-
-  try {
-    new QRCode(h, {
-      text: text,
-      width: 220,
-      height: 220,
-      colorDark: '#0b3b8c',
-      colorLight: '#ffffff'
-    });
-  } catch(e) {
-    h.style.cssText='padding:10px;font-size:12px;word-break:break-all';
-    h.textContent=text;
-  }
+  buildQR(lines.join('\n'));
 }
 
 // ── TOGGLE LOGIC ───────────────────────────────────────────
@@ -650,6 +648,32 @@ function togglePackerLength(){
   rv('packer_length')==='verified'?box.classList.remove('hidden'):box.classList.add('hidden');
 }
 
+// ── COMPLETION STATUS FOR PDF STAMP ─────────────────────────
+function getProgressInfo(){
+  var fields=[
+    {type:'text',id:'engineerName'},{type:'text',id:'wellNumber'},
+    {type:'text',id:'arrivalTime'},{type:'text',id:'unitNumber'},
+    {type:'select',id:'company'},{type:'select',id:'client'},
+    {type:'radio',name:'a1'},{type:'radio',name:'a2'},{type:'radio',name:'a3'},
+    {type:'radio',name:'b2'},{type:'radio',name:'c1'},
+    {type:'radio',name:'c2_main'},{type:'radio',name:'c3'},
+    {type:'radio',name:'c5'},{type:'radio',name:'c6'},{type:'radio',name:'c7'},
+    {type:'radio',name:'packer_required'},
+    {type:'radio',name:'c9'},{type:'radio',name:'c10'}
+  ];
+  var total=fields.length,done=0;
+  fields.forEach(function(f){
+    if(f.type==='radio'){
+      var c=document.querySelector('input[name="'+f.name+'"]:checked');
+      if(c)done++;
+    }else{
+      var el=document.getElementById(f.id);
+      if(el&&el.value&&el.value.trim())done++;
+    }
+  });
+  return {done:done,total:total,isComplete:done===total};
+}
+
 // ── PDF ─────────────────────────────────────────────────────
 async function generateAndSharePdf(){
   if(!validateForm()){setStatus('⚠️ Please fill in required fields.');return;}
@@ -663,6 +687,8 @@ async function generateAndSharePdf(){
     var y=mT;
     var bR=36,bG=52,bB=71; // navy (matches banner)
     var gR=241,gG=181,gB=0; // gold
+    var progressInfo=getProgressInfo();
+    var stampDone=progressInfo.done, stampTotal=progressInfo.total, isComplete=progressInfo.isComplete;
 
     function chk(n){if(y+n>pageH-10){doc.addPage();y=mT;}}
     function sT(t){
@@ -720,6 +746,24 @@ async function generateAndSharePdf(){
       doc.text('Job Date: '+fmtDate(selDate),mL+3,y+10.5);
     }
     y+=17;
+
+    // ── STAMP: إذا progress 100% ──
+    if(isComplete){
+      var sx=pageW-mR-42,sy2=mT+2,sw=38,sh=16,sr=3;
+      doc.setFillColor(22,101,52);
+      doc.roundedRect(sx,sy2,sw,sh,sr,sr,'F');
+      doc.setDrawColor(255,255,255);
+      doc.setLineWidth(0.3);
+      doc.roundedRect(sx,sy2,sw,sh,sr,sr,'S');
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(8.5);
+      doc.setTextColor(255,255,255);
+      doc.text('COMPLETED',sx+4.5,sy2+7);
+      doc.setFontSize(6.5);
+      doc.setFont('helvetica','normal');
+      doc.text(stampDone+'/'+stampTotal+' fields',sx+8,sy2+12);
+      doc.setTextColor(0,0,0);
+    }
 
     // ── SECTIONS ──
     var unitN=normUnit(tv('unitNumber'));
@@ -833,27 +877,12 @@ function setStatus(m){
 
 // ── PROGRESS BAR ──────────────────────────────────────────
 function updateProgress(){
-  var fields=[
-    {type:'text',id:'engineerName'},{type:'text',id:'wellNumber'},
-    {type:'text',id:'arrivalTime'},{type:'text',id:'unitNumber'},
-    {type:'select',id:'company'},{type:'select',id:'client'},
-    {type:'radio',name:'a1'},{type:'radio',name:'a2'},{type:'radio',name:'a3'},
-    {type:'radio',name:'b2'},{type:'radio',name:'c1'},
-    {type:'radio',name:'c2_main'},{type:'radio',name:'c3'},
-    {type:'radio',name:'c5'},{type:'radio',name:'c6'},{type:'radio',name:'c7'},
-    {type:'radio',name:'packer_required'},
-    {type:'radio',name:'c9'},{type:'radio',name:'c10'}
-  ];
-  var total=fields.length,done=0;
-  fields.forEach(function(f){
-    if(f.type==='radio'){var c=document.querySelector('input[name="'+f.name+'"]:checked');if(c)done++;}
-    else{var el=document.getElementById(f.id);if(el&&el.value&&el.value.trim())done++;}
-  });
-  var pct=Math.round((done/total)*100);
+  var info=getProgressInfo();
+  var pct=Math.round((info.done/info.total)*100);
   var fill=document.getElementById('progressFill');
   var label=document.getElementById('progressLabel');
   if(fill)fill.style.width=pct+'%';
-  if(label)label.textContent=done+' / '+total+' completed ('+pct+'%)';
+  if(label)label.textContent=info.done+' / '+info.total+' completed ('+pct+'%)';
 }
 
 // ── AUTO SAVE ─────────────────────────────────────────────
@@ -987,4 +1016,4 @@ formatArrivalLive(document.getElementById('arrivalTime'));
 updateProgress();
 </script>
 </body>
-</html>
+  </html>
