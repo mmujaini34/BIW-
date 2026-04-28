@@ -322,7 +322,7 @@ var radioConfigs = {
   packer_required:[['Yes / نعم','yes'],['No / لا','no']],
   packer_mle:[['Verified / تم التحقق','verified'],['Not Verified / لم يتم التحقق','not_verified']],
   packer_length:[['Verified / تم التحقق','verified'],['Not Verified / لم يتم التحقق','not_verified']],
-  packer_type:[['Mandrel / منفذ واحد','mandrel'],['Three Ports / ثلاثة منافذ','three_ports'],['Optional / اختياري','optional']],
+  packer_type:[['Mandrel / منفذ واحد','mandrel'],['Three Ports / ثلاثة منافذ','three_ports']],
   c3:[['Available / متوفر','available'],['Not Available / غير متوفر','not_available']],
   c5:[['Verified / تم التحقق','verified'],['Not Verified / لم يتم التحقق','not_verified']],
   c6:[['Inspected / تم الفحص','inspected'],['Not Inspected / لم يتم الفحص','not_inspected']],
@@ -577,22 +577,34 @@ async function generateAndSharePdf(){
       doc.setTextColor(0,0,0);
     }
 
-    // Share or download
+    // Download + Share
     var blob=doc.output('blob');
     var ts=fmtDT(pAt).replace(/[\s:/]/g,'_').replace(/__+/g,'_');
     var fn='BIW_ITT_Checklist_'+ts+'.pdf';
+
+    // دائماً ننزل أولاً
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement('a');
+    a.href=url;a.download=fn;a.style.display='none';
+    document.body.appendChild(a);a.click();
+    setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(url);},3000);
+
+    // بعدين نحاول Share (iOS/Android)
     var file=new File([blob],fn,{type:'application/pdf'});
-    var shared=false;
-    if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){
-      try{await navigator.share({files:[file],title:'BIW ITT Checklist'});setStatus('✅ PDF shared!');shared=true;}
-      catch(e){if(e.name!=='AbortError')console.warn(e);}
-    }
-    if(!shared){
-      var url=URL.createObjectURL(blob);
-      var a=document.createElement('a');a.href=url;a.download=fn;a.style.display='none';
-      document.body.appendChild(a);a.click();
-      setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(url);},2000);
-      setStatus('✅ PDF downloaded.');
+    var canShareFile=navigator.share&&navigator.canShare&&navigator.canShare({files:[file]});
+    if(canShareFile){
+      try{
+        await navigator.share({files:[file],title:'BIW ITT Checklist'});
+        setStatus('✅ PDF downloaded & shared!');
+      }catch(e){
+        if(e.name==='AbortError'){
+          setStatus('✅ PDF downloaded. Share cancelled.');
+        }else{
+          setStatus('✅ PDF downloaded. Open it from Downloads to share on WhatsApp.');
+        }
+      }
+    }else{
+      setStatus('✅ PDF downloaded! Open it from your Downloads folder to share on WhatsApp.');
     }
   }catch(err){console.error(err);setStatus('Error generating PDF. Please try again.');}
   finally{setBusy(false);}
