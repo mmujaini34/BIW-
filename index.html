@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <title>BIW ITT Installation &amp; Preparation Checklist</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" onerror="(function(){var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js';document.head.appendChild(s);})();"></script>
 <style>
 :root{
   --blue:#0b3b8c;--blue2:#1f5fbf;--gold:#f1b500;
@@ -593,21 +593,40 @@ function confirmSig(){sigData=document.getElementById('sigCanvas').toDataURL('im
 function buildQR(text){
   var h=document.getElementById('qrHolder');
   h.innerHTML='';
-  try{
-    if(typeof QRCode==='undefined') throw new Error('no QRCode');
-    new QRCode(h,{text:text,width:220,height:220,colorDark:'#0b3b8c',colorLight:'#ffffff'});
-  } catch(e){
-    // Fallback: QR image server. If that also fails, show the plain text.
-    var img=document.createElement('img');
-    img.src='https://api.qrserver.com/v1/create-qr-code/?data='+encodeURIComponent(text)+'&size=220x220&color=0b3b8c&bgcolor=ffffff';
-    img.alt='Job QR Code';
-    img.style.cssText='width:220px;height:220px;display:block;margin:auto;';
-    img.onerror=function(){
-      h.style.cssText='padding:10px;font-size:12px;word-break:break-all;text-align:center;line-height:1.6';
-      h.textContent=text;
-    };
-    h.appendChild(img);
+  h.removeAttribute('style');
+  var cleanText=String(text||'').trim();
+  if(!cleanText){
+    h.innerHTML='<div style="padding:20px;color:#991b1b;font-size:14px;text-align:center">No QR data found<br>لا توجد بيانات لإنشاء QR</div>';
+    return;
   }
+
+  // 1) First choice: local QRCode.js library
+  try{
+    if(typeof QRCode!=='undefined'){
+      new QRCode(h,{text:cleanText,width:220,height:220,colorDark:'#0b3b8c',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel ? QRCode.CorrectLevel.H : undefined});
+      if(h.children && h.children.length){return;}
+    }
+  }catch(e){}
+
+  // 2) Fallback image server #1
+  var img=document.createElement('img');
+  img.alt='Job QR Code';
+  img.style.cssText='width:220px;height:220px;display:block;margin:auto;border:0;';
+
+  var triedSecond=false;
+  img.onerror=function(){
+    if(!triedSecond){
+      triedSecond=true;
+      // Fallback image server #2
+      img.src='https://quickchart.io/qr?size=220&margin=1&text='+encodeURIComponent(cleanText);
+      return;
+    }
+    // 3) Last fallback: show the QR data as text instead of a broken/not-found image
+    h.style.cssText='padding:10px;font-size:12px;word-break:break-all;text-align:center;line-height:1.6;color:#18212f;';
+    h.textContent=cleanText;
+  };
+  img.src='https://api.qrserver.com/v1/create-qr-code/?size=220x220&data='+encodeURIComponent(cleanText);
+  h.appendChild(img);
 }
 
 function showQR(){
@@ -745,25 +764,24 @@ async function generateAndSharePdf(){
       doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(80,90,110);
       doc.text('Job Date: '+fmtDate(selDate),mL+3,y+10.5);
     }
-    y+=17;
-
-    // ── STAMP: إذا progress 100% ──
+    // ── SMALL COMPLETED STAMP: inside the yellow timestamp box, right side ──
     if(isComplete){
-      var sx=pageW-mR-42,sy2=mT+2,sw=38,sh=16,sr=3;
+      var sx=mL+uW-31, sy2=y+2.2, sw=28, sh=9.5, sr=2;
       doc.setFillColor(22,101,52);
       doc.roundedRect(sx,sy2,sw,sh,sr,sr,'F');
       doc.setDrawColor(255,255,255);
-      doc.setLineWidth(0.3);
+      doc.setLineWidth(0.25);
       doc.roundedRect(sx,sy2,sw,sh,sr,sr,'S');
       doc.setFont('helvetica','bold');
-      doc.setFontSize(8.5);
+      doc.setFontSize(6.2);
       doc.setTextColor(255,255,255);
-      doc.text('COMPLETED',sx+4.5,sy2+7);
-      doc.setFontSize(6.5);
+      doc.text('COMPLETED',sx+3.2,sy2+4.0);
+      doc.setFontSize(4.8);
       doc.setFont('helvetica','normal');
-      doc.text(stampDone+'/'+stampTotal+' fields',sx+8,sy2+12);
+      doc.text(stampDone+'/'+stampTotal+' fields',sx+6.2,sy2+7.4);
       doc.setTextColor(0,0,0);
     }
+    y+=17;
 
     // ── SECTIONS ──
     var unitN=normUnit(tv('unitNumber'));
