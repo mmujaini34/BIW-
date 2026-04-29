@@ -327,8 +327,8 @@ body.dark .select-box{
           <div class="sub-title">Packer Size / مقاس الباكر</div>
           <select id="packer_size" class="select-box">
             <option value="">Select / اختر</option>
-            <option value="7″">7″</option>
-            <option value="9⅝″">9⅝″</option>
+            <option value='7"'>7"</option>
+            <option value='9⅝"'>9⅝"</option>
           </select>
         </div>
         <div class="sub-card">
@@ -746,7 +746,9 @@ async function generateAndSharePdf(){
       var lW=uW*0.55,vW=uW*0.45,lX=mL,vX=mL+lW;
       doc.setFontSize(8);doc.setFont('helvetica','normal');
       var lL=doc.splitTextToSize(String(label||''),lW-4);
-      var vL=doc.splitTextToSize(String(value||'—'),vW-4);
+      var rawValue=String(value||'—');
+      var isPackerFraction=(rawValue==='9⅝\"');
+      var vL=isPackerFraction?[rawValue]:doc.splitTextToSize(rawValue,vW-4);
       var lh=4.2,cH=Math.max(8,Math.max(lL.length,vL.length)*lh+3);
       chk(cH+1);
       if(shade){doc.setFillColor(245,248,252);doc.rect(mL,y,uW,cH,'F');}
@@ -754,11 +756,24 @@ async function generateAndSharePdf(){
       doc.line(mL,y+cH,mL+uW,y+cH);doc.line(vX,y,vX,y+cH);
       doc.setFont('helvetica','bold');doc.setFontSize(8.2);doc.setTextColor(11,59,140);doc.text(lL,lX+2,y+lh);
       doc.setFont('helvetica','normal');doc.setFontSize(8.5);
-      var vLow=String(value||'').toLowerCase();
+      var vLow=rawValue.toLowerCase();
       if(vLow==='verified'||vLow==='contacted'||vLow==='notified'||vLow==='available'||vLow==='inspected'||vLow==='yes'){doc.setTextColor(22,101,52);}
       else if(vLow==='not verified'||vLow==='not contacted'||vLow==='not notified'||vLow==='not available'||vLow==='not inspected'||vLow==='no'){doc.setTextColor(153,27,27);}
       else{doc.setTextColor(51,65,85);}
-      doc.text(vL,vX+2,y+lh);doc.setTextColor(0,0,0);y+=cH;
+      if(isPackerFraction){
+        // jsPDF built-in Helvetica does not render the single ⅝ glyph correctly.
+        // Draw it manually so the PDF visually shows: 9⅝\"
+        var tx=vX+2, ty=y+lh;
+        doc.setFont('helvetica','normal');doc.setFontSize(8.5);doc.text('9',tx,ty);
+        var nx=tx+doc.getTextWidth('9')+0.7;
+        doc.setFontSize(5.6);doc.text('5',nx,ty-1.9);
+        doc.setFontSize(8.5);doc.text('/',nx+1.8,ty-0.2);
+        doc.setFontSize(5.6);doc.text('8',nx+4.0,ty+1.1);
+        doc.setFontSize(8.5);doc.text('\"',nx+6.2,ty);
+      }else{
+        doc.text(vL,vX+2,y+lh);
+      }
+      doc.setTextColor(0,0,0);y+=cH;
     }
 
     // ── PDF HEADER - same website image ──
@@ -1061,4 +1076,4 @@ formatArrivalLive(document.getElementById('arrivalTime'));
 updateProgress();
 </script>
 </body>
-  </html>
+</html>
