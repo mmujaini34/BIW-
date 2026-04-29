@@ -596,37 +596,60 @@ function buildQR(text){
   h.removeAttribute('style');
   var cleanText=String(text||'').trim();
   if(!cleanText){
-    h.innerHTML='<div style="padding:20px;color:#991b1b;font-size:14px;text-align:center">No QR data found<br>لا توجد بيانات لإنشاء QR</div>';
+    h.innerHTML='<div style="padding:20px;color:#991b1b;font-size:14px;text-align:center">❌ No QR data found<br>لا توجد بيانات لإنشاء QR</div>';
     return;
   }
 
-  // 1) First choice: local QRCode.js library
+  // Loading indicator
+  h.innerHTML='<div style="padding:20px;color:#0b3b8c;font-size:14px;text-align:center">⏳ جاري إنشاء QR...</div>';
+
+  // Helper: try next source
+  function tryGoogleCharts(){
+    h.innerHTML='';
+    var img=document.createElement('img');
+    img.alt='Job QR Code';
+    img.style.cssText='width:220px;height:220px;display:block;margin:auto;border:0;border-radius:8px;';
+    img.onerror=function(){
+      // Last resort: show text
+      h.style.cssText='padding:10px;font-size:12px;word-break:break-all;text-align:center;line-height:1.6;color:#18212f;background:#f8fbff;border-radius:8px;';
+      h.innerHTML='<div style="color:#991b1b;margin-bottom:8px;font-weight:bold">⚠️ لا يمكن تحميل QR — تحقق من الاتصال</div><div style="font-size:11px;color:#333">'+cleanText.replace(/\n/g,'<br>')+'</div>';
+    };
+    img.src='https://chart.googleapis.com/chart?chs=220x220&cht=qr&chl='+encodeURIComponent(cleanText)+'&choe=UTF-8';
+    h.appendChild(img);
+  }
+
+  function tryQuickChart(){
+    h.innerHTML='';
+    var img=document.createElement('img');
+    img.alt='Job QR Code';
+    img.style.cssText='width:220px;height:220px;display:block;margin:auto;border:0;border-radius:8px;';
+    img.onerror=tryGoogleCharts;
+    img.src='https://quickchart.io/qr?size=220&margin=1&text='+encodeURIComponent(cleanText);
+    h.appendChild(img);
+  }
+
+  // 1) Try QRCode.js library first (works offline)
   try{
     if(typeof QRCode!=='undefined'){
-      new QRCode(h,{text:cleanText,width:220,height:220,colorDark:'#0b3b8c',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel ? QRCode.CorrectLevel.H : undefined});
-      if(h.children && h.children.length){return;}
+      h.innerHTML='';
+      new QRCode(h,{text:cleanText,width:220,height:220,colorDark:'#0b3b8c',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel?QRCode.CorrectLevel.H:undefined});
+      // Verify it actually rendered something
+      setTimeout(function(){
+        var canvas=h.querySelector('canvas');
+        var img=h.querySelector('img');
+        if((!canvas||canvas.width===0)&&(!img||!img.src)){tryQuickChart();}
+      },400);
+      return;
     }
   }catch(e){}
 
-  // 2) Fallback image server #1
-  var img=document.createElement('img');
-  img.alt='Job QR Code';
-  img.style.cssText='width:220px;height:220px;display:block;margin:auto;border:0;';
-
-  var triedSecond=false;
-  img.onerror=function(){
-    if(!triedSecond){
-      triedSecond=true;
-      // Fallback image server #2
-      img.src='https://quickchart.io/qr?size=220&margin=1&text='+encodeURIComponent(cleanText);
-      return;
-    }
-    // 3) Last fallback: show the QR data as text instead of a broken/not-found image
-    h.style.cssText='padding:10px;font-size:12px;word-break:break-all;text-align:center;line-height:1.6;color:#18212f;';
-    h.textContent=cleanText;
-  };
-  img.src='https://api.qrserver.com/v1/create-qr-code/?size=220x220&data='+encodeURIComponent(cleanText);
-  h.appendChild(img);
+  // 2) api.qrserver fallback
+  var img2=document.createElement('img');
+  img2.alt='Job QR Code';
+  img2.style.cssText='width:220px;height:220px;display:block;margin:auto;border:0;border-radius:8px;';
+  img2.onerror=tryQuickChart;
+  img2.onload=function(){h.innerHTML='';h.appendChild(img2);};
+  img2.src='https://api.qrserver.com/v1/create-qr-code/?size=220x220&data='+encodeURIComponent(cleanText);
 }
 
 function showQR(){
@@ -636,6 +659,7 @@ function showQR(){
   var unit=normUnit(tv('unitNumber'));
   var client=tv('client');
   var company=tv('company');
+  var jobDate=tv('jobDate');
   var lines=[];
   if(eng)lines.push('Engineer: '+eng);
   if(crew)lines.push('Crew Leader: '+crew);
@@ -643,13 +667,16 @@ function showQR(){
   if(unit)lines.push('Unit: '+unit);
   if(client)lines.push('Client: '+client);
   if(company)lines.push('Company: '+company);
+  if(jobDate)lines.push('Date: '+jobDate);
+
+  var modal=document.getElementById('qrModal');
+  var h=document.getElementById('qrHolder');
+  modal.classList.remove('hidden');
+
   if(!lines.length){
-    document.getElementById('qrModal').classList.remove('hidden');
-    var h=document.getElementById('qrHolder');
-    h.innerHTML='<div style="padding:20px;color:#5a6a85;font-size:14px;text-align:center">⚠️ Please fill in at least one field first<br><br>الرجاء ملء الحقول أولاً</div>';
+    h.innerHTML='<div style="padding:24px 16px;color:#78350f;font-size:15px;text-align:center;background:#fffbeb;border-radius:12px;border:1px solid #f1b500">⚠️ الرجاء ملء الحقول أولاً<br><br><span style="font-size:13px;color:#5a6a85">Engineer Name أو Well Number على الأقل</span></div>';
     return;
   }
-  document.getElementById('qrModal').classList.remove('hidden');
   buildQR(lines.join('\n'));
 }
 
